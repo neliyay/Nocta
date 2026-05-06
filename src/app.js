@@ -108,6 +108,10 @@ const commands = [
         .addChannelOption(o => o.setName('salon').setDescription('Salon à déverrouiller (actuel par défaut)'))
         .addStringOption(o => o.setName('raison').setDescription('Raison'))
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels),
+
+    new SlashCommandBuilder()
+        .setName('josselin')
+        .setDescription('Un fait important sur Josselin'),
 ];
 
 // ─── Helpers embeds ───────────────────────────────────────────────────────────
@@ -306,6 +310,11 @@ client.on('interactionCreate', async interaction => {
             const raison = interaction.options.getString('raison') ?? 'Aucune raison fournie';
             await target.permissionOverwrites.edit(guild.roles.everyone, { SendMessages: null });
             return interaction.reply({ embeds: [ok('Salon déverrouillé', `${target} a été déverrouillé.\n**Raison :** ${raison}`)] });
+        }
+
+        // ── /josselin ─────────────────────────────────────────────────────────
+        if (commandName === 'josselin') {
+            return interaction.reply('josselin est un pd');
         }
 
     } catch (e) {
