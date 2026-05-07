@@ -2,7 +2,8 @@ import 'dotenv/config';
 import {
     Client, GatewayIntentBits, REST, Routes,
     SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder,
-    ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType
+    ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType,
+    StringSelectMenuBuilder, StringSelectMenuOptionBuilder
 } from 'discord.js';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
@@ -166,15 +167,14 @@ client.once('ready', async () => {
 
 client.on('interactionCreate', async interaction => {
     // ── Buttons ───────────────────────────────────────────────────────────────
-    if (interaction.isButton()) {
-        if (interaction.customId === 'ticket_create') {
-            await handleTicketCreate(interaction);
-            return;
-        }
-        if (interaction.customId === 'ticket_close') {
-            await handleTicketClose(interaction);
-            return;
-        }
+    if (interaction.isStringSelectMenu() && interaction.customId === 'ticket_select') {
+        await handleTicketCreate(interaction, interaction.values[0]);
+        return;
+    }
+
+    if (interaction.isButton() && interaction.customId === 'ticket_close') {
+        await handleTicketClose(interaction);
+        return;
     }
 
     if (!interaction.isChatInputCommand()) return;
@@ -337,18 +337,38 @@ client.on('interactionCreate', async interaction => {
             saveTickets(tickets);
 
             const embed = new EmbedBuilder()
-                .setColor(0x5865F2)
+                .setColor(0x7B2FBE)
                 .setTitle('Nocta Ticket Support')
-                .setDescription('If you need help with nocta.lol, please click the button below.\nOur staff team will assist you as soon as possible.')
+                .setDescription('If you need help with nocta.lol, please select an option below.')
                 .setImage('https://media.discordapp.net/attachments/1496591912734425223/1501981489145974897/image.png?ex=69fe0cc4&is=69fcbb44&hm=1371486b1bf4cae44934b74e44e6d82c81b5b0b7dcf788b2e459b319bc707f8c&=&format=webp&quality=lossless')
                 .setFooter({ text: 'Nocta Support • nocta.lol' });
 
             const row = new ActionRowBuilder().addComponents(
-                new ButtonBuilder()
-                    .setCustomId('ticket_create')
-                    .setLabel('Open a Ticket')
-                    .setEmoji('🎫')
-                    .setStyle(ButtonStyle.Primary)
+                new StringSelectMenuBuilder()
+                    .setCustomId('ticket_select')
+                    .setPlaceholder('Select an option')
+                    .addOptions(
+                        new StringSelectMenuOptionBuilder()
+                            .setLabel('General Support')
+                            .setDescription('I need help with something')
+                            .setEmoji('❓')
+                            .setValue('general'),
+                        new StringSelectMenuOptionBuilder()
+                            .setLabel('Bug Report')
+                            .setDescription('I found a bug on nocta.lol')
+                            .setEmoji('🐛')
+                            .setValue('bug'),
+                        new StringSelectMenuOptionBuilder()
+                            .setLabel('Partnership')
+                            .setDescription('I want to partner with Nocta')
+                            .setEmoji('🤝')
+                            .setValue('partnership'),
+                        new StringSelectMenuOptionBuilder()
+                            .setLabel('Other')
+                            .setDescription('Something else')
+                            .setEmoji('📩')
+                            .setValue('other'),
+                    )
             );
 
             await channel.send({ embeds: [embed], components: [row] });
@@ -367,7 +387,7 @@ client.on('interactionCreate', async interaction => {
     }
 });
 
-async function handleTicketCreate(interaction) {
+async function handleTicketCreate(interaction, category = 'general') {
     try {
         const guild  = interaction.guild;
         const user   = interaction.user;
@@ -394,6 +414,8 @@ async function handleTicketCreate(interaction) {
             });
         }
 
+        const categoryLabels = { general: '❓ General Support', bug: '🐛 Bug Report', partnership: '🤝 Partnership', other: '📩 Other' };
+
         const ticketChannel = await guild.channels.create({
             name: `ticket-${user.username.toLowerCase().replace(/[^a-z0-9]/g, '')}`,
             type: ChannelType.GuildText,
@@ -401,9 +423,10 @@ async function handleTicketCreate(interaction) {
         });
 
         const embed = new EmbedBuilder()
-            .setColor(0x57F287)
+            .setColor(0x7B2FBE)
             .setTitle('🎫 Ticket Opened')
             .setDescription(`Hello ${user}! A member of our staff will be with you shortly.\nDescribe your issue and we'll help you as soon as possible.`)
+            .addFields({ name: 'Category', value: categoryLabels[category] ?? category, inline: true })
             .setFooter({ text: `Opened by ${user.tag}` })
             .setTimestamp();
 
