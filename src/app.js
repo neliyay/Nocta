@@ -340,7 +340,7 @@ client.on('interactionCreate', async interaction => {
                 .setColor(0x7B2FBE)
                 .setTitle('Nocta Ticket Support')
                 .setDescription('If you need help with nocta.lol, please select an option below.')
-                .setImage('https://media.discordapp.net/attachments/1496591912734425223/1501981489145974897/image.png?ex=69fe0cc4&is=69fcbb44&hm=1371486b1bf4cae44934b74e44e6d82c81b5b0b7dcf788b2e459b319bc707f8c&=&format=webp&quality=lossless')
+                .setThumbnail('https://media.discordapp.net/attachments/1496591912734425223/1501981489145974897/image.png?ex=69fe0cc4&is=69fcbb44&hm=1371486b1bf4cae44934b74e44e6d82c81b5b0b7dcf788b2e459b319bc707f8c&=&format=webp&quality=lossless')
                 .setFooter({ text: 'Nocta Support • nocta.lol' });
 
             const row = new ActionRowBuilder().addComponents(
