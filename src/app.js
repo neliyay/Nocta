@@ -380,14 +380,14 @@ async function handleTicketCreate(interaction) {
             return interaction.reply({ content: `You already have an open ticket: ${existing}`, ephemeral: true });
         }
 
-        const permissionoverwrites = [
+        const permissionOverwrites = [
             { id: guild.roles.everyone.id, deny: [PermissionFlagsBits.ViewChannel] },
             { id: user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory] },
             { id: client.user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ManageChannels] },
         ];
 
         if (staffRoleId) {
-            permissionoverwrites.push({
+            permissionOverwrites.push({
                 id: staffRoleId,
                 allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory]
             });
