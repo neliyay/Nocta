@@ -137,7 +137,7 @@ const client = new Client({
 client.once('ready', async () => {
     console.log(`✅ Connecté en tant que ${client.user.tag}`);
 
-    const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
+    const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
     const commandsJson = commands.map(c => c.toJSON());
 
     // Vider les commandes globales
@@ -337,4 +337,4 @@ client.on('interactionCreate', async interaction => {
     }
 });
 
-client.login(process.env.TOKEN);
+client.login(process.env.DISCORD_TOKEN);
