@@ -336,17 +336,25 @@ client.on('interactionCreate', async interaction => {
             tickets[guild.id].staffRoleId = staffRole.id;
             saveTickets(tickets);
 
-            const embed = new EmbedBuilder()
+            const bannerEmbed = new EmbedBuilder()
                 .setColor(0x7B2FBE)
-                .setTitle('Nocta Ticket Support')
+                .setImage('https://media.discordapp.net/attachments/1496591912734425223/1501981489145974897/image.png?ex=69fe0cc4&is=69fcbb44&hm=1371486b1bf4cae44934b74e44e6d82c81b5b0b7dcf788b2e459b319bc707f8c&=&format=webp&quality=lossless');
+
+            const textEmbed = new EmbedBuilder()
+                .setColor(0x7B2FBE)
                 .setDescription('If you need help with nocta.lol, please select an option below.')
-                .setThumbnail('https://media.discordapp.net/attachments/1496591912734425223/1501981489145974897/image.png?ex=69fe0cc4&is=69fcbb44&hm=1371486b1bf4cae44934b74e44e6d82c81b5b0b7dcf788b2e459b319bc707f8c&=&format=webp&quality=lossless')
+                .addFields(
+                    { name: '❓ General Support', value: 'You need help with something on our platform.' },
+                    { name: '🐛 Bug Report', value: 'You found a bug or an issue on nocta.lol.' },
+                    { name: '🤝 Partnership', value: 'You want to establish a partnership with Nocta.' },
+                    { name: '📩 Other', value: 'Your request does not fit in any of the above categories.' },
+                )
                 .setFooter({ text: 'Nocta Support • nocta.lol' });
 
             const row = new ActionRowBuilder().addComponents(
                 new StringSelectMenuBuilder()
                     .setCustomId('ticket_select')
-                    .setPlaceholder('Select an option')
+                    .setPlaceholder('Choose a ticket type...')
                     .addOptions(
                         new StringSelectMenuOptionBuilder()
                             .setLabel('General Support')
@@ -371,7 +379,7 @@ client.on('interactionCreate', async interaction => {
                     )
             );
 
-            await channel.send({ embeds: [embed], components: [row] });
+            await channel.send({ embeds: [bannerEmbed, textEmbed], components: [row] });
             return interaction.reply({ embeds: [ok('Panel Sent', `Ticket panel sent. Staff role: ${staffRole}`)], ephemeral: true });
         }
 
