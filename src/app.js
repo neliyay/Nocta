@@ -140,6 +140,13 @@ client.once('ready', async () => {
 
     const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
     try {
+        // Vider les anciennes commandes guild-specific (Nocta framework)
+        for (const guild of client.guilds.cache.values()) {
+            await rest.put(Routes.applicationGuildCommands(client.user.id, guild.id), { body: [] });
+        }
+        console.log('✅ Anciennes commandes guild supprimées');
+
+        // Enregistrer les commandes globales
         await rest.put(Routes.applicationCommands(client.user.id), { body: commands });
         console.log('✅ Commandes slash enregistrées');
     } catch (e) {
