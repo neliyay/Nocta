@@ -338,10 +338,10 @@ client.on('interactionCreate', async interaction => {
 
             const embed = new EmbedBuilder()
                 .setColor(0x5865F2)
-                .setTitle('🎫 Support Tickets')
-                .setDescription('Need help? Click the button below to open a ticket.\nOur staff will assist you as soon as possible.')
+                .setTitle('Nocta Ticket Support')
+                .setDescription('If you need help with nocta.lol, please click the button below.\nOur staff team will assist you as soon as possible.')
                 .setImage('https://media.discordapp.net/attachments/1496591912734425223/1501981489145974897/image.png?ex=69fe0cc4&is=69fcbb44&hm=1371486b1bf4cae44934b74e44e6d82c81b5b0b7dcf788b2e459b319bc707f8c&=&format=webp&quality=lossless')
-                .setFooter({ text: guild.name });
+                .setFooter({ text: 'Nocta Support • nocta.lol' });
 
             const row = new ActionRowBuilder().addComponents(
                 new ButtonBuilder()
