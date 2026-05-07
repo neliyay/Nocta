@@ -9,8 +9,6 @@ import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
-// ─── Warnings (stockage JSON) ─────────────────────────────────────────────────
-
 const WARNINGS_FILE = join(__dirname, '..', 'warnings.json');
 
 function loadWarnings() {
@@ -22,108 +20,102 @@ function saveWarnings(data) {
     writeFileSync(WARNINGS_FILE, JSON.stringify(data, null, 2));
 }
 
-// ─── Définition des commandes slash ──────────────────────────────────────────
-
 const commands = [
     new SlashCommandBuilder()
         .setName('ban')
-        .setDescription('Bannir un membre du serveur')
-        .addUserOption(o => o.setName('membre').setDescription('Membre à bannir').setRequired(true))
-        .addStringOption(o => o.setName('raison').setDescription('Raison du ban'))
+        .setDescription('Ban a member from the server')
+        .addUserOption(o => o.setName('user').setDescription('Member to ban').setRequired(true))
+        .addStringOption(o => o.setName('reason').setDescription('Reason for the ban'))
         .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers),
 
     new SlashCommandBuilder()
         .setName('unban')
-        .setDescription('Débannir un utilisateur')
-        .addStringOption(o => o.setName('id').setDescription("ID de l'utilisateur").setRequired(true))
-        .addStringOption(o => o.setName('raison').setDescription('Raison'))
+        .setDescription('Unban a user')
+        .addStringOption(o => o.setName('id').setDescription('User ID').setRequired(true))
+        .addStringOption(o => o.setName('reason').setDescription('Reason'))
         .setDefaultMemberPermissions(PermissionFlagsBits.BanMembers),
 
     new SlashCommandBuilder()
         .setName('kick')
-        .setDescription('Expulser un membre du serveur')
-        .addUserOption(o => o.setName('membre').setDescription('Membre à expulser').setRequired(true))
-        .addStringOption(o => o.setName('raison').setDescription('Raison du kick'))
+        .setDescription('Kick a member from the server')
+        .addUserOption(o => o.setName('user').setDescription('Member to kick').setRequired(true))
+        .addStringOption(o => o.setName('reason').setDescription('Reason for the kick'))
         .setDefaultMemberPermissions(PermissionFlagsBits.KickMembers),
 
     new SlashCommandBuilder()
         .setName('timeout')
-        .setDescription('Rendre muet un membre temporairement')
-        .addUserOption(o => o.setName('membre').setDescription('Membre à mute').setRequired(true))
-        .addStringOption(o => o.setName('durée').setDescription('Durée du mute').setRequired(true)
+        .setDescription('Temporarily timeout a member')
+        .addUserOption(o => o.setName('user').setDescription('Member to timeout').setRequired(true))
+        .addStringOption(o => o.setName('duration').setDescription('Timeout duration').setRequired(true)
             .addChoices(
                 { name: '5 minutes',  value: '300000'    },
                 { name: '10 minutes', value: '600000'    },
                 { name: '30 minutes', value: '1800000'   },
-                { name: '1 heure',    value: '3600000'   },
-                { name: '6 heures',   value: '21600000'  },
-                { name: '1 jour',     value: '86400000'  },
-                { name: '1 semaine',  value: '604800000' },
+                { name: '1 hour',     value: '3600000'   },
+                { name: '6 hours',    value: '21600000'  },
+                { name: '1 day',      value: '86400000'  },
+                { name: '1 week',     value: '604800000' },
             ))
-        .addStringOption(o => o.setName('raison').setDescription('Raison'))
+        .addStringOption(o => o.setName('reason').setDescription('Reason'))
         .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
 
     new SlashCommandBuilder()
         .setName('untimeout')
-        .setDescription("Retirer le mute d'un membre")
-        .addUserOption(o => o.setName('membre').setDescription('Membre à unmute').setRequired(true))
-        .addStringOption(o => o.setName('raison').setDescription('Raison'))
+        .setDescription('Remove timeout from a member')
+        .addUserOption(o => o.setName('user').setDescription('Member to untimeout').setRequired(true))
+        .addStringOption(o => o.setName('reason').setDescription('Reason'))
         .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
 
     new SlashCommandBuilder()
         .setName('warn')
-        .setDescription('Avertir un membre')
-        .addUserOption(o => o.setName('membre').setDescription('Membre à avertir').setRequired(true))
-        .addStringOption(o => o.setName('raison').setDescription("Raison de l'avertissement").setRequired(true))
+        .setDescription('Warn a member')
+        .addUserOption(o => o.setName('user').setDescription('Member to warn').setRequired(true))
+        .addStringOption(o => o.setName('reason').setDescription('Reason for the warning').setRequired(true))
         .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
 
     new SlashCommandBuilder()
         .setName('warnings')
-        .setDescription("Voir les avertissements d'un membre")
-        .addUserOption(o => o.setName('membre').setDescription('Membre').setRequired(true))
+        .setDescription("View a member's warnings")
+        .addUserOption(o => o.setName('user').setDescription('Member').setRequired(true))
         .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
 
     new SlashCommandBuilder()
         .setName('clearwarnings')
-        .setDescription("Effacer tous les avertissements d'un membre")
-        .addUserOption(o => o.setName('membre').setDescription('Membre').setRequired(true))
+        .setDescription("Clear all warnings of a member")
+        .addUserOption(o => o.setName('user').setDescription('Member').setRequired(true))
         .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
 
     new SlashCommandBuilder()
         .setName('purge')
-        .setDescription('Supprimer des messages en masse')
-        .addIntegerOption(o => o.setName('nombre').setDescription('Nombre de messages (1-100)').setRequired(true).setMinValue(1).setMaxValue(100))
+        .setDescription('Delete messages in bulk')
+        .addIntegerOption(o => o.setName('amount').setDescription('Number of messages (1-100)').setRequired(true).setMinValue(1).setMaxValue(100))
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageMessages),
 
     new SlashCommandBuilder()
         .setName('lock')
-        .setDescription('Verrouiller un salon')
-        .addChannelOption(o => o.setName('salon').setDescription('Salon à verrouiller (actuel par défaut)'))
-        .addStringOption(o => o.setName('raison').setDescription('Raison'))
+        .setDescription('Lock a channel')
+        .addChannelOption(o => o.setName('channel').setDescription('Channel to lock (current by default)'))
+        .addStringOption(o => o.setName('reason').setDescription('Reason'))
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels),
 
     new SlashCommandBuilder()
         .setName('unlock')
-        .setDescription('Déverrouiller un salon')
-        .addChannelOption(o => o.setName('salon').setDescription('Salon à déverrouiller (actuel par défaut)'))
-        .addStringOption(o => o.setName('raison').setDescription('Raison'))
+        .setDescription('Unlock a channel')
+        .addChannelOption(o => o.setName('channel').setDescription('Channel to unlock (current by default)'))
+        .addStringOption(o => o.setName('reason').setDescription('Reason'))
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels),
 
     new SlashCommandBuilder()
         .setName('josselin')
-        .setDescription('Un fait important sur Josselin'),
+        .setDescription('An important fact about Josselin'),
 ];
-
-// ─── Helpers embeds ───────────────────────────────────────────────────────────
 
 const makeEmbed = (color, title, description) =>
     new EmbedBuilder().setColor(color).setTitle(title).setDescription(description).setTimestamp();
 
 const ok   = (title, desc) => makeEmbed(0x57F287, `✅ ${title}`, desc);
-const err  = (desc)        => makeEmbed(0xED4245, '❌ Erreur',   desc);
+const err  = (desc)        => makeEmbed(0xED4245, '❌ Error',    desc);
 const info = (title, desc) => makeEmbed(0x5865F2, title,          desc);
-
-// ─── Client ───────────────────────────────────────────────────────────────────
 
 const client = new Client({
     intents: [
@@ -135,31 +127,27 @@ const client = new Client({
 });
 
 client.once('ready', async () => {
-    console.log(`✅ Connecté en tant que ${client.user.tag}`);
+    console.log(`✅ Connected as ${client.user.tag}`);
 
     const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
     const commandsJson = commands.map(c => c.toJSON());
 
-    // Vider les commandes globales
     try {
         await rest.put(Routes.applicationCommands(client.user.id), { body: [] });
-        console.log('✅ Commandes globales vidées');
+        console.log('✅ Global commands cleared');
     } catch (e) {
-        console.error('Erreur vidage commandes globales :', e);
+        console.error('Error clearing global commands:', e);
     }
 
-    // Enregistrer les commandes sur chaque serveur (instantané)
     for (const guild of client.guilds.cache.values()) {
         try {
             await rest.put(Routes.applicationGuildCommands(client.user.id, guild.id), { body: commandsJson });
-            console.log(`✅ Commandes enregistrées sur ${guild.name}`);
+            console.log(`✅ Commands registered on ${guild.name}`);
         } catch (e) {
-            console.error(`Erreur sur ${guild.name} :`, e);
+            console.error(`Error on ${guild.name}:`, e);
         }
     }
 });
-
-// ─── Handler principal ────────────────────────────────────────────────────────
 
 client.on('interactionCreate', async interaction => {
     if (!interaction.isChatInputCommand()) return;
@@ -169,169 +157,157 @@ client.on('interactionCreate', async interaction => {
 
     try {
 
-        // ── /ban ──────────────────────────────────────────────────────────────
         if (commandName === 'ban') {
-            const target = interaction.options.getUser('membre');
-            const raison = interaction.options.getString('raison') ?? 'Aucune raison fournie';
+            const target = interaction.options.getUser('user');
+            const reason = interaction.options.getString('reason') ?? 'No reason provided';
 
-            if (target.id === interaction.user.id) return replyErr('Tu ne peux pas te bannir toi-même.');
-            if (target.id === client.user.id)       return replyErr('Je ne peux pas me bannir moi-même.');
+            if (target.id === interaction.user.id) return replyErr('You cannot ban yourself.');
+            if (target.id === client.user.id)       return replyErr('I cannot ban myself.');
 
             const m = guild.members.cache.get(target.id);
             if (m) {
-                if (!m.bannable) return replyErr('Je ne peux pas bannir ce membre (rôle trop élevé).');
+                if (!m.bannable) return replyErr('I cannot ban this member (role too high).');
                 if (member.roles.highest.comparePositionTo(m.roles.highest) <= 0)
-                    return replyErr('Tu ne peux pas bannir un membre avec un rôle supérieur ou égal au tien.');
+                    return replyErr('You cannot ban a member with a higher or equal role.');
             }
 
-            await guild.members.ban(target.id, { reason: `${interaction.user.tag} : ${raison}` });
-            return interaction.reply({ embeds: [ok('Membre banni', `**${target.tag}** a été banni.\n**Raison :** ${raison}`)] });
+            await guild.members.ban(target.id, { reason: `${interaction.user.tag}: ${reason}` });
+            return interaction.reply({ embeds: [ok('Member Banned', `**${target.tag}** has been banned.\n**Reason:** ${reason}`)] });
         }
 
-        // ── /unban ────────────────────────────────────────────────────────────
         if (commandName === 'unban') {
             const id     = interaction.options.getString('id');
-            const raison = interaction.options.getString('raison') ?? 'Aucune raison fournie';
+            const reason = interaction.options.getString('reason') ?? 'No reason provided';
             try {
                 const user = await client.users.fetch(id);
-                await guild.members.unban(id, `${interaction.user.tag} : ${raison}`);
-                return interaction.reply({ embeds: [ok('Membre débanni', `**${user.tag}** a été débanni.\n**Raison :** ${raison}`)] });
+                await guild.members.unban(id, `${interaction.user.tag}: ${reason}`);
+                return interaction.reply({ embeds: [ok('Member Unbanned', `**${user.tag}** has been unbanned.\n**Reason:** ${reason}`)] });
             } catch {
-                return replyErr('ID invalide ou utilisateur non banni.');
+                return replyErr('Invalid ID or user is not banned.');
             }
         }
 
-        // ── /kick ─────────────────────────────────────────────────────────────
         if (commandName === 'kick') {
-            const target = interaction.options.getUser('membre');
-            const raison = interaction.options.getString('raison') ?? 'Aucune raison fournie';
+            const target = interaction.options.getUser('user');
+            const reason = interaction.options.getString('reason') ?? 'No reason provided';
 
-            if (target.id === interaction.user.id) return replyErr('Tu ne peux pas te kick toi-même.');
-            if (target.id === client.user.id)       return replyErr('Je ne peux pas me kick moi-même.');
+            if (target.id === interaction.user.id) return replyErr('You cannot kick yourself.');
+            if (target.id === client.user.id)       return replyErr('I cannot kick myself.');
 
             const m = guild.members.cache.get(target.id);
-            if (!m)          return replyErr("Ce membre n'est pas sur le serveur.");
-            if (!m.kickable) return replyErr('Je ne peux pas kick ce membre.');
+            if (!m)          return replyErr('This member is not in the server.');
+            if (!m.kickable) return replyErr('I cannot kick this member.');
             if (member.roles.highest.comparePositionTo(m.roles.highest) <= 0)
-                return replyErr('Tu ne peux pas kick un membre avec un rôle supérieur ou égal au tien.');
+                return replyErr('You cannot kick a member with a higher or equal role.');
 
-            await m.kick(`${interaction.user.tag} : ${raison}`);
-            return interaction.reply({ embeds: [ok('Membre expulsé', `**${target.tag}** a été expulsé.\n**Raison :** ${raison}`)] });
+            await m.kick(`${interaction.user.tag}: ${reason}`);
+            return interaction.reply({ embeds: [ok('Member Kicked', `**${target.tag}** has been kicked.\n**Reason:** ${reason}`)] });
         }
 
-        // ── /timeout ──────────────────────────────────────────────────────────
         if (commandName === 'timeout') {
-            const target   = interaction.options.getUser('membre');
-            const duration = parseInt(interaction.options.getString('durée'));
-            const raison   = interaction.options.getString('raison') ?? 'Aucune raison fournie';
+            const target   = interaction.options.getUser('user');
+            const duration = parseInt(interaction.options.getString('duration'));
+            const reason   = interaction.options.getString('reason') ?? 'No reason provided';
 
-            if (target.id === interaction.user.id) return replyErr('Tu ne peux pas te mute toi-même.');
-            if (target.id === client.user.id)       return replyErr('Je ne peux pas me mute moi-même.');
+            if (target.id === interaction.user.id) return replyErr('You cannot timeout yourself.');
+            if (target.id === client.user.id)       return replyErr('I cannot timeout myself.');
 
             const m = guild.members.cache.get(target.id);
-            if (!m)             return replyErr("Ce membre n'est pas sur le serveur.");
-            if (!m.moderatable) return replyErr('Je ne peux pas mute ce membre.');
+            if (!m)             return replyErr('This member is not in the server.');
+            if (!m.moderatable) return replyErr('I cannot timeout this member.');
             if (member.roles.highest.comparePositionTo(m.roles.highest) <= 0)
-                return replyErr('Tu ne peux pas mute un membre avec un rôle supérieur ou égal au tien.');
+                return replyErr('You cannot timeout a member with a higher or equal role.');
 
             const labels = {
                 '300000': '5 minutes', '600000': '10 minutes', '1800000': '30 minutes',
-                '3600000': '1 heure', '21600000': '6 heures', '86400000': '1 jour', '604800000': '1 semaine',
+                '3600000': '1 hour', '21600000': '6 hours', '86400000': '1 day', '604800000': '1 week',
             };
 
-            await m.timeout(duration, `${interaction.user.tag} : ${raison}`);
-            return interaction.reply({ embeds: [ok('Membre mute', `**${target.tag}** a été mute pour **${labels[String(duration)]}**.\n**Raison :** ${raison}`)] });
+            await m.timeout(duration, `${interaction.user.tag}: ${reason}`);
+            return interaction.reply({ embeds: [ok('Member Timed Out', `**${target.tag}** has been timed out for **${labels[String(duration)]}**.\n**Reason:** ${reason}`)] });
         }
 
-        // ── /untimeout ────────────────────────────────────────────────────────
         if (commandName === 'untimeout') {
-            const target = interaction.options.getUser('membre');
-            const raison = interaction.options.getString('raison') ?? 'Aucune raison fournie';
+            const target = interaction.options.getUser('user');
+            const reason = interaction.options.getString('reason') ?? 'No reason provided';
 
             const m = guild.members.cache.get(target.id);
-            if (!m) return replyErr("Ce membre n'est pas sur le serveur.");
+            if (!m) return replyErr('This member is not in the server.');
 
-            await m.timeout(null, `${interaction.user.tag} : ${raison}`);
-            return interaction.reply({ embeds: [ok('Membre unmute', `**${target.tag}** a été unmute.\n**Raison :** ${raison}`)] });
+            await m.timeout(null, `${interaction.user.tag}: ${reason}`);
+            return interaction.reply({ embeds: [ok('Timeout Removed', `**${target.tag}**'s timeout has been removed.\n**Reason:** ${reason}`)] });
         }
 
-        // ── /warn ─────────────────────────────────────────────────────────────
         if (commandName === 'warn') {
-            const target = interaction.options.getUser('membre');
-            const raison = interaction.options.getString('raison');
+            const target = interaction.options.getUser('user');
+            const reason = interaction.options.getString('reason');
 
-            if (target.id === interaction.user.id) return replyErr('Tu ne peux pas te warn toi-même.');
-            if (target.bot)                         return replyErr('Tu ne peux pas warn un bot.');
+            if (target.id === interaction.user.id) return replyErr('You cannot warn yourself.');
+            if (target.bot)                         return replyErr('You cannot warn a bot.');
 
             const warnings = loadWarnings();
             const key = `${guild.id}_${target.id}`;
             if (!warnings[key]) warnings[key] = [];
-            warnings[key].push({ raison, moderateur: interaction.user.tag, date: new Date().toISOString() });
+            warnings[key].push({ reason, moderator: interaction.user.tag, date: new Date().toISOString() });
             saveWarnings(warnings);
 
-            return interaction.reply({ embeds: [ok('Avertissement envoyé', `**${target.tag}** a reçu un avertissement.\n**Raison :** ${raison}\n**Total :** ${warnings[key].length} avertissement(s)`)] });
+            return interaction.reply({ embeds: [ok('Warning Issued', `**${target.tag}** has been warned.\n**Reason:** ${reason}\n**Total:** ${warnings[key].length} warning(s)`)] });
         }
 
-        // ── /warnings ─────────────────────────────────────────────────────────
         if (commandName === 'warnings') {
-            const target   = interaction.options.getUser('membre');
+            const target   = interaction.options.getUser('user');
             const warnings = loadWarnings();
             const key      = `${guild.id}_${target.id}`;
             const list     = warnings[key] ?? [];
 
             if (list.length === 0)
-                return interaction.reply({ embeds: [info(`📋 Avertissements de ${target.tag}`, 'Aucun avertissement.')] });
+                return interaction.reply({ embeds: [info(`📋 Warnings — ${target.tag}`, 'No warnings.')] });
 
             const text = list.map((w, i) =>
-                `**#${i + 1}** — ${w.raison}\n*Par ${w.moderateur} le ${new Date(w.date).toLocaleDateString('fr-FR')}*`
+                `**#${i + 1}** — ${w.reason ?? w.raison}\n*By ${w.moderator ?? w.moderateur} on ${new Date(w.date).toLocaleDateString('en-US')}*`
             ).join('\n\n');
 
-            return interaction.reply({ embeds: [info(`📋 Avertissements de ${target.tag}`, text)] });
+            return interaction.reply({ embeds: [info(`📋 Warnings — ${target.tag}`, text)] });
         }
 
-        // ── /clearwarnings ────────────────────────────────────────────────────
         if (commandName === 'clearwarnings') {
-            const target   = interaction.options.getUser('membre');
+            const target   = interaction.options.getUser('user');
             const warnings = loadWarnings();
             const key      = `${guild.id}_${target.id}`;
             warnings[key]  = [];
             saveWarnings(warnings);
 
-            return interaction.reply({ embeds: [ok('Avertissements effacés', `Les avertissements de **${target.tag}** ont été effacés.`)] });
+            return interaction.reply({ embeds: [ok('Warnings Cleared', `All warnings for **${target.tag}** have been cleared.`)] });
         }
 
-        // ── /purge ────────────────────────────────────────────────────────────
         if (commandName === 'purge') {
-            const nombre = interaction.options.getInteger('nombre');
+            const amount = interaction.options.getInteger('amount');
             await interaction.deferReply({ ephemeral: true });
-            const deleted = await channel.bulkDelete(nombre, true);
-            return interaction.editReply({ embeds: [ok('Messages supprimés', `**${deleted.size}** message(s) supprimé(s).`)] });
+            const deleted = await channel.bulkDelete(amount, true);
+            return interaction.editReply({ embeds: [ok('Messages Deleted', `**${deleted.size}** message(s) deleted.`)] });
         }
 
-        // ── /lock ─────────────────────────────────────────────────────────────
         if (commandName === 'lock') {
-            const target = interaction.options.getChannel('salon') ?? channel;
-            const raison = interaction.options.getString('raison') ?? 'Aucune raison fournie';
+            const target = interaction.options.getChannel('channel') ?? channel;
+            const reason = interaction.options.getString('reason') ?? 'No reason provided';
             await target.permissionOverwrites.edit(guild.roles.everyone, { SendMessages: false });
-            return interaction.reply({ embeds: [ok('Salon verrouillé', `${target} a été verrouillé.\n**Raison :** ${raison}`)] });
+            return interaction.reply({ embeds: [ok('Channel Locked', `${target} has been locked.\n**Reason:** ${reason}`)] });
         }
 
-        // ── /unlock ───────────────────────────────────────────────────────────
         if (commandName === 'unlock') {
-            const target = interaction.options.getChannel('salon') ?? channel;
-            const raison = interaction.options.getString('raison') ?? 'Aucune raison fournie';
+            const target = interaction.options.getChannel('channel') ?? channel;
+            const reason = interaction.options.getString('reason') ?? 'No reason provided';
             await target.permissionOverwrites.edit(guild.roles.everyone, { SendMessages: null });
-            return interaction.reply({ embeds: [ok('Salon déverrouillé', `${target} a été déverrouillé.\n**Raison :** ${raison}`)] });
+            return interaction.reply({ embeds: [ok('Channel Unlocked', `${target} has been unlocked.\n**Reason:** ${reason}`)] });
         }
 
-        // ── /josselin ─────────────────────────────────────────────────────────
         if (commandName === 'josselin') {
             return interaction.reply('josselin est un pd');
         }
 
     } catch (e) {
         console.error(e);
-        const reply = { embeds: [err('Une erreur inattendue est survenue.')], ephemeral: true };
+        const reply = { embeds: [err('An unexpected error occurred.')], ephemeral: true };
         if (interaction.replied || interaction.deferred) interaction.editReply(reply);
         else interaction.reply(reply);
     }
