@@ -342,12 +342,13 @@ client.on('interactionCreate', async interaction => {
 
             const textEmbed = new EmbedBuilder()
                 .setColor(0x7B2FBE)
-                .setDescription('If you need help with nocta.lol, please select an option below.')
+                .setDescription('If you need help with **nocta.lol**, please select an option below.\n​')
                 .addFields(
-                    { name: '❓ General Support', value: 'You need help with something on our platform.' },
-                    { name: '🐛 Bug Report', value: 'You found a bug or an issue on nocta.lol.' },
-                    { name: '🤝 Partnership', value: 'You want to establish a partnership with Nocta.' },
-                    { name: '📩 Other', value: 'Your request does not fit in any of the above categories.' },
+                    { name: '❓ General Support', value: 'You need help with something on our platform. Our team will assist you as soon as possible.\n​' },
+                    { name: '🐛 Bug Report', value: 'You encountered a bug or an unexpected issue on nocta.lol. Please provide as much detail as possible.\n​' },
+                    { name: '🤝 Partnership', value: 'You want to establish a partnership or a collaboration with Nocta. Tell us more about your project.\n​' },
+                    { name: '📩 Other', value: 'Your request does not fit in any of the above categories. Open a ticket and we will figure it out together.\n​' },
+                    { name: '​', value: '─────────────────────────────────────────' },
                 )
                 .setFooter({ text: 'Nocta Support • nocta.lol' });
 
