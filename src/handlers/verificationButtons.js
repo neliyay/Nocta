@@ -1,7 +1,5 @@
 import { MessageFlags } from 'discord.js';
-import { successEmbed, errorEmbed } from '../utils/embeds.js';
-import { verifyUser } from '../services/verificationService.js';
-import { handleInteractionError } from '../utils/errorHandler.js';
+import { errorEmbed } from '../utils/embeds.js';
 import { logger } from '../utils/logger.js';
 import { InteractionHelper } from '../utils/interactionHelper.js';
 
@@ -32,41 +30,8 @@ export async function handleVerificationButton(interaction, client) {
         });
 
         
-        const result = await verifyUser(client, guild.id, userId, {
-            source: 'button_click',
-            moderatorId: null
-        });
-
-        if (!result.success) {
-            if (result.alreadyVerified) {
-                return await InteractionHelper.safeEditReply(interaction, {
-                    embeds: [errorEmbed(
-                        "Already Verified",
-                        "You are already verified and have access to all server channels."
-                    )],
-                });
-            }
-
-            return await InteractionHelper.safeEditReply(interaction, {
-                embeds: [errorEmbed(
-                    "Verification Failed",
-                    "An error occurred during verification. Please try again or contact an administrator."
-                )],
-            });
-        }
-
-        
-        logger.info('User verified via button', {
-            guildId: guild.id,
-            userId,
-            roleName: result.roleName
-        });
-
-        await InteractionHelper.safeEditReply(interaction, {
-            embeds: [successEmbed(
-                "✅ Verification Successful!",
-                `You have been verified and given the **${result.roleName}** role!\n\nYou now have access to all server channels and features. Welcome! 🎉`
-            )],
+        return await InteractionHelper.safeEditReply(interaction, {
+            embeds: [errorEmbed("Disabled", "The verification system has been disabled.")],
         });
 
     } catch (error) {

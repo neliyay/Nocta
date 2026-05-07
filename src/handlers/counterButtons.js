@@ -1,6 +1,5 @@
 import { MessageFlags } from 'discord.js';
-import { createEmbed, errorEmbed, successEmbed } from '../utils/embeds.js';
-import { performDeletionByCounterId } from '../commands/ServerStats/modules/serverstats_delete.js';
+import { createEmbed, errorEmbed } from '../utils/embeds.js';
 import { logger } from '../utils/logger.js';
 
 export const counterDeleteActionHandler = {
@@ -61,18 +60,8 @@ export const counterDeleteActionHandler = {
         return;
       }
 
-      const result = await performDeletionByCounterId(client, interaction.guild, counterId);
-
-      if (!result.success) {
-        await interaction.editReply({
-          embeds: [errorEmbed(result.message)],
-          components: []
-        }).catch(logger.error);
-        return;
-      }
-
       await interaction.editReply({
-        embeds: [successEmbed(result.message)],
+        embeds: [errorEmbed('Disabled', 'The server stats system has been disabled.')],
         components: []
       }).catch(logger.error);
     } catch (error) {
