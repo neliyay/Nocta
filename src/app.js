@@ -1,7 +1,8 @@
 import 'dotenv/config';
 import {
     Client, GatewayIntentBits, REST, Routes,
-    SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder
+    SlashCommandBuilder, PermissionFlagsBits, EmbedBuilder,
+    ActionRowBuilder, ButtonBuilder, ButtonStyle, ChannelType
 } from 'discord.js';
 import { readFileSync, writeFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
@@ -10,14 +11,22 @@ import { fileURLToPath } from 'url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 
 const WARNINGS_FILE = join(__dirname, '..', 'warnings.json');
+const TICKETS_FILE  = join(__dirname, '..', 'tickets.json');
 
 function loadWarnings() {
     if (!existsSync(WARNINGS_FILE)) writeFileSync(WARNINGS_FILE, '{}');
     return JSON.parse(readFileSync(WARNINGS_FILE, 'utf8'));
 }
-
 function saveWarnings(data) {
     writeFileSync(WARNINGS_FILE, JSON.stringify(data, null, 2));
+}
+
+function loadTickets() {
+    if (!existsSync(TICKETS_FILE)) writeFileSync(TICKETS_FILE, '{}');
+    return JSON.parse(readFileSync(TICKETS_FILE, 'utf8'));
+}
+function saveTickets(data) {
+    writeFileSync(TICKETS_FILE, JSON.stringify(data, null, 2));
 }
 
 const commands = [
@@ -81,7 +90,7 @@ const commands = [
 
     new SlashCommandBuilder()
         .setName('clearwarnings')
-        .setDescription("Clear all warnings of a member")
+        .setDescription('Clear all warnings of a member')
         .addUserOption(o => o.setName('user').setDescription('Member').setRequired(true))
         .setDefaultMemberPermissions(PermissionFlagsBits.ModerateMembers),
 
@@ -104,6 +113,12 @@ const commands = [
         .addChannelOption(o => o.setName('channel').setDescription('Channel to unlock (current by default)'))
         .addStringOption(o => o.setName('reason').setDescription('Reason'))
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageChannels),
+
+    new SlashCommandBuilder()
+        .setName('ticketpanel')
+        .setDescription('Send the ticket panel in this channel')
+        .addRoleOption(o => o.setName('staffrole').setDescription('Role that can see tickets').setRequired(true))
+        .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
 
     new SlashCommandBuilder()
         .setName('josselin')
@@ -150,6 +165,18 @@ client.once('ready', async () => {
 });
 
 client.on('interactionCreate', async interaction => {
+    // ── Buttons ───────────────────────────────────────────────────────────────
+    if (interaction.isButton()) {
+        if (interaction.customId === 'ticket_create') {
+            await handleTicketCreate(interaction);
+            return;
+        }
+        if (interaction.customId === 'ticket_close') {
+            await handleTicketClose(interaction);
+            return;
+        }
+    }
+
     if (!interaction.isChatInputCommand()) return;
 
     const { commandName, guild, member, channel } = interaction;
@@ -301,6 +328,32 @@ client.on('interactionCreate', async interaction => {
             return interaction.reply({ embeds: [ok('Channel Unlocked', `${target} has been unlocked.\n**Reason:** ${reason}`)] });
         }
 
+        if (commandName === 'ticketpanel') {
+            const staffRole = interaction.options.getRole('staffrole');
+
+            const tickets = loadTickets();
+            if (!tickets[guild.id]) tickets[guild.id] = {};
+            tickets[guild.id].staffRoleId = staffRole.id;
+            saveTickets(tickets);
+
+            const embed = new EmbedBuilder()
+                .setColor(0x5865F2)
+                .setTitle('🎫 Support Tickets')
+                .setDescription('Need help? Click the button below to open a ticket.\nOur staff will assist you as soon as possible.')
+                .setFooter({ text: guild.name });
+
+            const row = new ActionRowBuilder().addComponents(
+                new ButtonBuilder()
+                    .setCustomId('ticket_create')
+                    .setLabel('Open a Ticket')
+                    .setEmoji('🎫')
+                    .setStyle(ButtonStyle.Primary)
+            );
+
+            await channel.send({ embeds: [embed], components: [row] });
+            return interaction.reply({ embeds: [ok('Panel Sent', `Ticket panel sent. Staff role: ${staffRole}`)], ephemeral: true });
+        }
+
         if (commandName === 'josselin') {
             return interaction.reply('josselin est un pd');
         }
@@ -312,5 +365,82 @@ client.on('interactionCreate', async interaction => {
         else interaction.reply(reply);
     }
 });
+
+async function handleTicketCreate(interaction) {
+    try {
+        const guild  = interaction.guild;
+        const user   = interaction.user;
+
+        const tickets = loadTickets();
+        const staffRoleId = tickets[guild.id]?.staffRoleId;
+
+        // Check if user already has an open ticket
+        const existing = guild.channels.cache.find(c => c.name === `ticket-${user.username.toLowerCase().replace(/[^a-z0-9]/g, '')}`);
+        if (existing) {
+            return interaction.reply({ content: `You already have an open ticket: ${existing}`, ephemeral: true });
+        }
+
+        const permissionoverwrites = [
+            { id: guild.roles.everyone.id, deny: [PermissionFlagsBits.ViewChannel] },
+            { id: user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory] },
+            { id: client.user.id, allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ManageChannels] },
+        ];
+
+        if (staffRoleId) {
+            permissionoverwrites.push({
+                id: staffRoleId,
+                allow: [PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages, PermissionFlagsBits.ReadMessageHistory]
+            });
+        }
+
+        const ticketChannel = await guild.channels.create({
+            name: `ticket-${user.username.toLowerCase().replace(/[^a-z0-9]/g, '')}`,
+            type: ChannelType.GuildText,
+            permissionOverwrites,
+        });
+
+        const embed = new EmbedBuilder()
+            .setColor(0x57F287)
+            .setTitle('🎫 Ticket Opened')
+            .setDescription(`Hello ${user}! A member of our staff will be with you shortly.\nDescribe your issue and we'll help you as soon as possible.`)
+            .setFooter({ text: `Opened by ${user.tag}` })
+            .setTimestamp();
+
+        const row = new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+                .setCustomId('ticket_close')
+                .setLabel('Close Ticket')
+                .setEmoji('🔒')
+                .setStyle(ButtonStyle.Danger)
+        );
+
+        await ticketChannel.send({ content: `${user}${staffRoleId ? ` <@&${staffRoleId}>` : ''}`, embeds: [embed], components: [row] });
+        await interaction.reply({ content: `Your ticket has been created: ${ticketChannel}`, ephemeral: true });
+
+    } catch (e) {
+        console.error('Error creating ticket:', e);
+        await interaction.reply({ content: 'An error occurred while creating your ticket.', ephemeral: true });
+    }
+}
+
+async function handleTicketClose(interaction) {
+    try {
+        const channel = interaction.channel;
+
+        const embed = new EmbedBuilder()
+            .setColor(0xED4245)
+            .setTitle('🔒 Ticket Closing')
+            .setDescription(`Ticket closed by ${interaction.user}.\nThis channel will be deleted in 5 seconds.`)
+            .setTimestamp();
+
+        await interaction.reply({ embeds: [embed] });
+
+        setTimeout(() => channel.delete().catch(() => null), 5000);
+
+    } catch (e) {
+        console.error('Error closing ticket:', e);
+        await interaction.reply({ content: 'An error occurred while closing the ticket.', ephemeral: true });
+    }
+}
 
 client.login(process.env.DISCORD_TOKEN);
