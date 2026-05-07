@@ -139,18 +139,24 @@ client.once('ready', async () => {
     console.log(`✅ Connecté en tant que ${client.user.tag}`);
 
     const rest = new REST({ version: '10' }).setToken(process.env.TOKEN);
-    try {
-        // Vider les anciennes commandes guild-specific (Nocta framework)
-        for (const guild of client.guilds.cache.values()) {
-            await rest.put(Routes.applicationGuildCommands(client.user.id, guild.id), { body: [] });
-        }
-        console.log('✅ Anciennes commandes guild supprimées');
+    const commandsJson = commands.map(c => c.toJSON());
 
-        // Enregistrer les commandes globales
-        await rest.put(Routes.applicationCommands(client.user.id), { body: commands });
-        console.log('✅ Commandes slash enregistrées');
+    // Vider les commandes globales
+    try {
+        await rest.put(Routes.applicationCommands(client.user.id), { body: [] });
+        console.log('✅ Commandes globales vidées');
     } catch (e) {
-        console.error('Erreur enregistrement commandes :', e);
+        console.error('Erreur vidage commandes globales :', e);
+    }
+
+    // Enregistrer les commandes sur chaque serveur (instantané)
+    for (const guild of client.guilds.cache.values()) {
+        try {
+            await rest.put(Routes.applicationGuildCommands(client.user.id, guild.id), { body: commandsJson });
+            console.log(`✅ Commandes enregistrées sur ${guild.name}`);
+        } catch (e) {
+            console.error(`Erreur sur ${guild.name} :`, e);
+        }
     }
 });
 
