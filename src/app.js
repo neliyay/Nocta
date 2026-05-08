@@ -132,6 +132,12 @@ const commands = [
         .addUserOption(o => o.setName('user').setDescription('Member to check (yourself by default)')),
 
     new SlashCommandBuilder()
+        .setName('rulespanel')
+        .setDescription('Send the rules panel with an accept button')
+        .addRoleOption(o => o.setName('role').setDescription('Role given when rules are accepted').setRequired(true))
+        .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
+
+    new SlashCommandBuilder()
         .setName('setinvitechannel')
         .setDescription('Set the channel where invite logs will be sent')
         .addChannelOption(o => o.setName('channel').setDescription('The log channel').setRequired(true))
@@ -196,6 +202,27 @@ client.on('interactionCreate', async interaction => {
     if (interaction.isStringSelectMenu() && interaction.customId === 'ticket_select') {
         await handleTicketCreate(interaction, interaction.values[0]);
         return;
+    }
+
+    if (interaction.isButton() && interaction.customId === 'rules_accept') {
+        try {
+            const tickets = loadTickets();
+            const rulesRoleId = tickets[interaction.guild.id]?.rulesRoleId;
+            if (!rulesRoleId) return interaction.reply({ content: 'No role configured. Ask an admin to run `/rulespanel` again.', ephemeral: true });
+
+            const role = interaction.guild.roles.cache.get(rulesRoleId);
+            if (!role) return interaction.reply({ content: 'The configured role no longer exists.', ephemeral: true });
+
+            const member = interaction.member;
+            if (member.roles.cache.has(rulesRoleId))
+                return interaction.reply({ content: 'You have already accepted the rules.', ephemeral: true });
+
+            await member.roles.add(role);
+            return interaction.reply({ content: `✅ Rules accepted! You now have access to the server.`, ephemeral: true });
+        } catch (e) {
+            console.error('Error in rules accept:', e);
+            return interaction.reply({ content: 'An error occurred. Please contact an admin.', ephemeral: true });
+        }
     }
 
     if (interaction.isButton() && interaction.customId === 'ticket_create') {
@@ -477,6 +504,43 @@ client.on('interactionCreate', async interaction => {
                         .setTimestamp()
                 ]
             });
+        }
+
+        if (commandName === 'rulespanel') {
+            const role = interaction.options.getRole('role');
+
+            const tickets = loadTickets();
+            if (!tickets[guild.id]) tickets[guild.id] = {};
+            tickets[guild.id].rulesRoleId = role.id;
+            saveTickets(tickets);
+
+            const bannerEmbed = new EmbedBuilder()
+                .setColor(0x0A1628)
+                .setImage('https://media.discordapp.net/attachments/1496591912734425222/1502454909524770888/image.png?ex=69ffc5ac&is=69fe742c&hm=78982e6d242eef5fe2d73a8e53b881b7aeb588634bf241fa04d85ba4782650c5&=&format=webp&quality=lossless');
+
+            const rulesEmbed = new EmbedBuilder()
+                .setColor(0x0A1628)
+                .setDescription('Please read and accept the rules below to gain access to the server.')
+                .addFields(
+                    { name: '§1 — Respect', value: 'Treat all members with respect. Harassment, insults, discrimination or any form of toxic behavior will not be tolerated.' },
+                    { name: '§2 — No Spam', value: 'Do not spam messages, emojis, mentions or links. Keep conversations clean and relevant to the channel.' },
+                    { name: '§3 — No NSFW', value: 'Any NSFW, explicit or disturbing content is strictly forbidden outside of designated channels.' },
+                    { name: '§4 — No Advertising', value: 'Do not advertise other Discord servers, social media or external services without prior staff approval.' },
+                    { name: '§5 — Follow Discord ToS', value: 'You must comply with [Discord\'s Terms of Service](https://discord.com/terms) and [Community Guidelines](https://discord.com/guidelines) at all times.' },
+                    { name: '§6 — Staff Authority', value: 'Follow staff instructions. If you disagree with a decision, open a ticket instead of arguing in public channels.' },
+                )
+                .setFooter({ text: 'By clicking ✅ below, you agree to all the rules above.' });
+
+            const row = new ActionRowBuilder().addComponents(
+                new ButtonBuilder()
+                    .setCustomId('rules_accept')
+                    .setLabel('Accept the Rules')
+                    .setEmoji('✅')
+                    .setStyle(ButtonStyle.Success)
+            );
+
+            await channel.send({ embeds: [bannerEmbed, rulesEmbed], components: [row] });
+            return interaction.reply({ embeds: [ok('Rules Panel Sent', `Members will receive ${role} upon accepting.`)], ephemeral: true });
         }
 
         if (commandName === 'setinvitechannel') {
