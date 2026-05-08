@@ -522,12 +522,12 @@ client.on('interactionCreate', async interaction => {
                 .setColor(0x0A1628)
                 .setDescription('Please read and accept the rules below to gain access to the server.')
                 .addFields(
-                    { name: '§1 — Respect', value: 'Treat all members with respect. Harassment, insults, discrimination or any form of toxic behavior will not be tolerated.' },
-                    { name: '§2 — No Spam', value: 'Do not spam messages, emojis, mentions or links. Keep conversations clean and relevant to the channel.' },
-                    { name: '§3 — No NSFW', value: 'Any NSFW, explicit or disturbing content is strictly forbidden outside of designated channels.' },
-                    { name: '§4 — No Advertising', value: 'Do not advertise other Discord servers, social media or external services without prior staff approval.' },
-                    { name: '§5 — Follow Discord ToS', value: 'You must comply with [Discord\'s Terms of Service](https://discord.com/terms) and [Community Guidelines](https://discord.com/guidelines) at all times.' },
-                    { name: '§6 — Staff Authority', value: 'Follow staff instructions. If you disagree with a decision, open a ticket instead of arguing in public channels.' },
+                    { name: '1. Be respectful', value: 'Treat everyone nicely. No harassment, insults or drama.' },
+                    { name: '2. No spam', value: 'Don\'t flood the chat with messages, mentions or random links.' },
+                    { name: '3. Keep it clean', value: 'No NSFW or disturbing content outside of the right channels.' },
+                    { name: '4. No advertising', value: 'Don\'t promote your server or socials without asking staff first.' },
+                    { name: '5. Discord ToS', value: 'Follow [Discord\'s Terms of Service](https://discord.com/terms) — pretty basic stuff.' },
+                    { name: '6. Listen to staff', value: 'If you have an issue with a decision, open a ticket instead of arguing.' },
                 )
                 .setFooter({ text: 'By clicking ✅ below, you agree to all the rules above.' });
 
