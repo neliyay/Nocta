@@ -350,7 +350,6 @@ client.on('interactionCreate', async interaction => {
                         '`💰` **Premium** — €32\n> 4,800 coins  *(+800 bonus)*\n​\n' +
                         '`💰` **Elite** — €64\n> 10,500 coins  *(+2,500 bonus)*'
                     },
-                    { name: '​', value: '─────────────────────────────────────────' },
                 )
                 .setFooter({ text: 'Nocta • nocta.lol' });
 
@@ -388,7 +387,6 @@ client.on('interactionCreate', async interaction => {
                     { name: '🐛 Bug Report', value: 'You encountered a bug or an unexpected issue on nocta.lol. Please provide as much detail as possible.\n​' },
                     { name: '🤝 Partnership', value: 'You want to establish a partnership or a collaboration with Nocta. Tell us more about your project.\n​' },
                     { name: '📩 Other', value: 'Your request does not fit in any of the above categories. Open a ticket and we will figure it out together.\n​' },
-                    { name: '​', value: '─────────────────────────────────────────' },
                 )
                 .setFooter({ text: 'Nocta Support • nocta.lol' });
 
