@@ -127,6 +127,12 @@ const commands = [
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
 
     new SlashCommandBuilder()
+        .setName('setinvitechannel')
+        .setDescription('Set the channel where invite logs will be sent')
+        .addChannelOption(o => o.setName('channel').setDescription('The log channel').setRequired(true))
+        .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
+
+    new SlashCommandBuilder()
         .setName('josselin')
         .setDescription('An important fact about Josselin'),
 ];
@@ -144,11 +150,21 @@ const client = new Client({
         GatewayIntentBits.GuildMembers,
         GatewayIntentBits.GuildMessages,
         GatewayIntentBits.GuildModeration,
+        GatewayIntentBits.GuildInvites,
     ]
 });
 
+client.inviteCache = new Map();
+
 client.once('ready', async () => {
     console.log(`✅ Connected as ${client.user.tag}`);
+
+    for (const guild of client.guilds.cache.values()) {
+        try {
+            const invites = await guild.invites.fetch();
+            client.inviteCache.set(guild.id, new Map(invites.map(i => [i.code, i.uses])));
+        } catch {}
+    }
 
     const rest = new REST({ version: '10' }).setToken(process.env.DISCORD_TOKEN);
     const commandsJson = commands.map(c => c.toJSON());
@@ -425,6 +441,15 @@ client.on('interactionCreate', async interaction => {
             return interaction.reply({ embeds: [ok('Panel Sent', `Ticket panel sent. Staff role: ${staffRole}`)], ephemeral: true });
         }
 
+        if (commandName === 'setinvitechannel') {
+            const logChannel = interaction.options.getChannel('channel');
+            const tickets = loadTickets();
+            if (!tickets[guild.id]) tickets[guild.id] = {};
+            tickets[guild.id].inviteChannelId = logChannel.id;
+            saveTickets(tickets);
+            return interaction.reply({ embeds: [ok('Invite Log Set', `Invite logs will be sent in ${logChannel}`)], ephemeral: true });
+        }
+
         if (commandName === 'josselin') {
             return interaction.reply('josselin est un pd');
         }
@@ -496,6 +521,40 @@ async function handleTicketCreate(interaction, category = 'general') {
         await interaction.reply({ content: 'An error occurred while creating your ticket.', ephemeral: true });
     }
 }
+
+client.on('guildMemberAdd', async member => {
+    try {
+        const guild = member.guild;
+        const tickets = loadTickets();
+        const logChannelId = tickets[guild.id]?.inviteChannelId;
+        if (!logChannelId) return;
+
+        const logChannel = guild.channels.cache.get(logChannelId);
+        if (!logChannel) return;
+
+        const cachedInvites = client.inviteCache.get(guild.id) ?? new Map();
+        const currentInvites = await guild.invites.fetch();
+
+        const usedInvite = currentInvites.find(i => (cachedInvites.get(i.code) ?? 0) < i.uses);
+        client.inviteCache.set(guild.id, new Map(currentInvites.map(i => [i.code, i.uses])));
+
+        const embed = new EmbedBuilder()
+            .setColor(0x57F287)
+            .setTitle('Member Joined')
+            .setThumbnail(member.user.displayAvatarURL())
+            .addFields(
+                { name: 'Member', value: `${member.user} (${member.user.tag})`, inline: true },
+                { name: 'Invited by', value: usedInvite ? `${usedInvite.inviter} (${usedInvite.inviter.tag})` : 'Unknown', inline: true },
+                { name: 'Total invites', value: usedInvite ? `${usedInvite.uses} invite(s)` : 'N/A', inline: true },
+            )
+            .setFooter({ text: `Member #${guild.memberCount}` })
+            .setTimestamp();
+
+        await logChannel.send({ embeds: [embed] });
+    } catch (e) {
+        console.error('Error in invite tracker:', e);
+    }
+});
 
 async function handleTicketClose(interaction) {
     try {
