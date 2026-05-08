@@ -127,6 +127,11 @@ const commands = [
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
 
     new SlashCommandBuilder()
+        .setName('invites')
+        .setDescription('Check the invite count of a member (or yourself)')
+        .addUserOption(o => o.setName('user').setDescription('Member to check (yourself by default)')),
+
+    new SlashCommandBuilder()
         .setName('setinvitechannel')
         .setDescription('Set the channel where invite logs will be sent')
         .addChannelOption(o => o.setName('channel').setDescription('The log channel').setRequired(true))
@@ -439,6 +444,33 @@ client.on('interactionCreate', async interaction => {
 
             await channel.send({ embeds: [bannerEmbed, textEmbed], components: [row] });
             return interaction.reply({ embeds: [ok('Panel Sent', `Ticket panel sent. Staff role: ${staffRole}`)], ephemeral: true });
+        }
+
+        if (commandName === 'invites') {
+            const target = interaction.options.getUser('user') ?? interaction.user;
+            const guildInvites = await guild.invites.fetch();
+            const userInvites = guildInvites.filter(i => i.inviter?.id === target.id);
+            const total = userInvites.reduce((sum, i) => sum + i.uses, 0);
+
+            const details = userInvites.size > 0
+                ? userInvites.map(i => `\`${i.code}\` — **${i.uses}** use(s)`).join('\n')
+                : 'No active invites.';
+
+            return interaction.reply({
+                embeds: [
+                    new EmbedBuilder()
+                        .setColor(0x5865F2)
+                        .setTitle(`📨 Invites — ${target.tag}`)
+                        .setThumbnail(target.displayAvatarURL())
+                        .addFields(
+                            { name: 'Total Invites', value: `**${total}**`, inline: true },
+                            { name: 'Active Links', value: `**${userInvites.size}**`, inline: true },
+                            { name: 'Invite Details', value: details },
+                        )
+                        .setTimestamp()
+                ],
+                ephemeral: false
+            });
         }
 
         if (commandName === 'setinvitechannel') {
