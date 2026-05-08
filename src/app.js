@@ -177,6 +177,11 @@ client.on('interactionCreate', async interaction => {
         return;
     }
 
+    if (interaction.isButton() && interaction.customId === 'ticket_create') {
+        await handleTicketCreate(interaction, 'purchase');
+        return;
+    }
+
     if (interaction.isButton() && interaction.customId === 'ticket_close') {
         await handleTicketClose(interaction);
         return;
