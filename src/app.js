@@ -559,16 +559,17 @@ async function handleTicketCreate(interaction, category = 'general') {
         const messages = [{ content: `${user}${staffRoleId ? ` <@&${staffRoleId}>` : ''}`, embeds: [embed], components: [row] }];
 
         if (isPurchase) {
+            const e = name => guild.emojis.cache.find(em => em.name === name)?.toString() ?? '';
             const walletEmbed = new EmbedBuilder()
                 .setColor(0x0A1628)
                 .setTitle('💳 Payment Wallets')
                 .setDescription('Send the exact amount to one of the addresses below based on your chosen currency.\nOnce done, **copy your txID** and send it here so we can verify your payment.')
                 .addFields(
-                    { name: '<:ltc:1> LTC', value: '```LcCHvevT7hhk7ojopmCUrYBzBcEGH1iJst```' },
-                    { name: '<:btc:1> BTC', value: '```bc1qqk96w52f6mpkfp4xwl35rafllmg8xwv6rypqlr```' },
-                    { name: '<:eth:1> ETH', value: '```0xab19Bc64B4D2DD0d47b78A5EF65A865729A0B5f8```' },
-                    { name: '<:usdc:1> USDC', value: '```0xab19Bc64B4D2DD0d47b78A5EF65A865729A0B5f8```' },
-                    { name: '<:usdt:1> USDT', value: '```0xab19Bc64B4D2DD0d47b78A5EF65A865729A0B5f8```' },
+                    { name: `${e('ltc')} LTC`, value: '```LcCHvevT7hhk7ojopmCUrYBzBcEGH1iJst```' },
+                    { name: `${e('btc')} BTC`, value: '```bc1qqk96w52f6mpkfp4xwl35rafllmg8xwv6rypqlr```' },
+                    { name: `${e('eth')} ETH`, value: '```0xab19Bc64B4D2DD0d47b78A5EF65A865729A0B5f8```' },
+                    { name: `${e('usdc')} USDC`, value: '```0xab19Bc64B4D2DD0d47b78A5EF65A865729A0B5f8```' },
+                    { name: `${e('usdt')} USDT`, value: '```0xab19Bc64B4D2DD0d47b78A5EF65A865729A0B5f8```' },
                 )
                 .setFooter({ text: 'After sending, paste your txID in this channel.' });
             messages.push({ embeds: [walletEmbed] });
