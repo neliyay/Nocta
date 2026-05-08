@@ -338,6 +338,7 @@ client.on('interactionCreate', async interaction => {
                 .setColor(0x0A1628)
                 .setURL('https://nocta.lol')
                 .setTitle('​')
+                .setDescription('​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​ ​')
                 .setImage('https://media.discordapp.net/attachments/1496591912734425222/1502444380697395200/image.png?ex=69ffbbde&is=69fe6a5e&hm=ff147b7e19ee2ddb1474c268bdfc69e4a51c1fff30aa2061852373572325f0cf&=&format=webp&quality=lossless');
 
             const shopEmbed = new EmbedBuilder()
@@ -345,10 +346,10 @@ client.on('interactionCreate', async interaction => {
                 .setDescription('## 🪙 Nocta Coins\nPurchase coins to unlock premium features on **nocta.lol**.\nOpen a ticket below and a staff member will process your order.')
                 .addFields(
                     { name: '​', value:
-                        '`💰` **Starter** — €8\n> 1,000 coins\n​\n' +
-                        '`💰` **Popular** — €16\n> 2,200 coins  *(+200 bonus)*\n​\n' +
-                        '`💰` **Premium** — €32\n> 4,800 coins  *(+800 bonus)*\n​\n' +
-                        '`💰` **Elite** — €64\n> 10,500 coins  *(+2,500 bonus)*'
+                        '**Starter** — €8\n> 1,000 coins\n​\n' +
+                        '**Popular** — €16\n> 2,200 coins  *(+200 bonus)*\n​\n' +
+                        '**Premium** — €32\n> 4,800 coins  *(+800 bonus)*\n​\n' +
+                        '**Elite** — €64\n> 10,500 coins  *(+2,500 bonus)*'
                     },
                 )
                 .setFooter({ text: 'Nocta • nocta.lol' });
