@@ -448,15 +448,22 @@ client.on('interactionCreate', async interaction => {
 
         if (commandName === 'invites') {
             const target = interaction.options.getUser('user') ?? interaction.user;
-            const guildInvites = await guild.invites.fetch();
+            await interaction.deferReply();
+
+            let guildInvites;
+            try {
+                guildInvites = await guild.invites.fetch();
+            } catch {
+                return interaction.editReply({ embeds: [err('I need the **Manage Server** permission to view invites.')] });
+            }
+
             const userInvites = guildInvites.filter(i => i.inviter?.id === target.id);
             const total = userInvites.reduce((sum, i) => sum + i.uses, 0);
-
             const details = userInvites.size > 0
                 ? userInvites.map(i => `\`${i.code}\` — **${i.uses}** use(s)`).join('\n')
                 : 'No active invites.';
 
-            return interaction.reply({
+            return interaction.editReply({
                 embeds: [
                     new EmbedBuilder()
                         .setColor(0x5865F2)
@@ -468,8 +475,7 @@ client.on('interactionCreate', async interaction => {
                             { name: 'Invite Details', value: details },
                         )
                         .setTimestamp()
-                ],
-                ephemeral: false
+                ]
             });
         }
 
@@ -502,8 +508,11 @@ async function handleTicketCreate(interaction, category = 'general') {
         const tickets = loadTickets();
         const staffRoleId = tickets[guild.id]?.staffRoleId;
 
-        // Check if user already has an open ticket
-        const existing = guild.channels.cache.find(c => c.name === `ticket-${user.username.toLowerCase().replace(/[^a-z0-9]/g, '')}`);
+        const isPurchase = category === 'purchase';
+        const channelPrefix = isPurchase ? 'coins' : 'ticket';
+        const cleanUsername = user.username.toLowerCase().replace(/[^a-z0-9]/g, '');
+
+        const existing = guild.channels.cache.find(c => c.name === `${channelPrefix}-${cleanUsername}`);
         if (existing) {
             return interaction.reply({ content: `You already have an open ticket: ${existing}`, ephemeral: true });
         }
@@ -521,18 +530,20 @@ async function handleTicketCreate(interaction, category = 'general') {
             });
         }
 
-        const categoryLabels = { general: '❓ General Support', bug: '🐛 Bug Report', partnership: '🤝 Partnership', other: '📩 Other' };
+        const categoryLabels = { general: '❓ General Support', bug: '🐛 Bug Report', partnership: '🤝 Partnership', other: '📩 Other', purchase: '🪙 Coin Purchase' };
 
         const ticketChannel = await guild.channels.create({
-            name: `ticket-${user.username.toLowerCase().replace(/[^a-z0-9]/g, '')}`,
+            name: `${channelPrefix}-${cleanUsername}`,
             type: ChannelType.GuildText,
             permissionOverwrites,
         });
 
         const embed = new EmbedBuilder()
             .setColor(0x7B2FBE)
-            .setTitle('🎫 Ticket Opened')
-            .setDescription(`Hello ${user}! A member of our staff will be with you shortly.\nDescribe your issue and we'll help you as soon as possible.`)
+            .setTitle(isPurchase ? '🪙 Coin Purchase' : '🎫 Ticket Opened')
+            .setDescription(isPurchase
+                ? `Hello ${user}! To complete your purchase, send the amount in crypto to one of the wallets below, then share your **transaction ID (txID)** in this channel.`
+                : `Hello ${user}! A member of our staff will be with you shortly.\nDescribe your issue and we'll help you as soon as possible.`)
             .addFields({ name: 'Category', value: categoryLabels[category] ?? category, inline: true })
             .setFooter({ text: `Opened by ${user.tag}` })
             .setTimestamp();
@@ -545,7 +556,25 @@ async function handleTicketCreate(interaction, category = 'general') {
                 .setStyle(ButtonStyle.Danger)
         );
 
-        await ticketChannel.send({ content: `${user}${staffRoleId ? ` <@&${staffRoleId}>` : ''}`, embeds: [embed], components: [row] });
+        const messages = [{ content: `${user}${staffRoleId ? ` <@&${staffRoleId}>` : ''}`, embeds: [embed], components: [row] }];
+
+        if (isPurchase) {
+            const walletEmbed = new EmbedBuilder()
+                .setColor(0x0A1628)
+                .setTitle('💳 Payment Wallets')
+                .setDescription('Send the exact amount to one of the addresses below based on your chosen currency.\nOnce done, **copy your txID** and send it here so we can verify your payment.')
+                .addFields(
+                    { name: '<:ltc:1> LTC', value: '```LcCHvevT7hhk7ojopmCUrYBzBcEGH1iJst```' },
+                    { name: '<:btc:1> BTC', value: '```bc1qqk96w52f6mpkfp4xwl35rafllmg8xwv6rypqlr```' },
+                    { name: '<:eth:1> ETH', value: '```0xab19Bc64B4D2DD0d47b78A5EF65A865729A0B5f8```' },
+                    { name: '<:usdc:1> USDC', value: '```0xab19Bc64B4D2DD0d47b78A5EF65A865729A0B5f8```' },
+                    { name: '<:usdt:1> USDT', value: '```0xab19Bc64B4D2DD0d47b78A5EF65A865729A0B5f8```' },
+                )
+                .setFooter({ text: 'After sending, paste your txID in this channel.' });
+            messages.push({ embeds: [walletEmbed] });
+        }
+
+        for (const msg of messages) await ticketChannel.send(msg);
         await interaction.reply({ content: `Your ticket has been created: ${ticketChannel}`, ephemeral: true });
 
     } catch (e) {
