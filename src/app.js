@@ -336,8 +336,6 @@ client.on('interactionCreate', async interaction => {
         if (commandName === 'coinspanel') {
             const bannerEmbed = new EmbedBuilder()
                 .setColor(0x0A1628)
-                .setURL('https://nocta.lol')
-                .setTitle('​')
                 .setImage('https://media.discordapp.net/attachments/1496591912734425222/1502444380697395200/image.png?ex=69ffbbde&is=69fe6a5e&hm=ff147b7e19ee2ddb1474c268bdfc69e4a51c1fff30aa2061852373572325f0cf&=&format=webp&quality=lossless');
 
             const shopEmbed = new EmbedBuilder()
