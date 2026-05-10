@@ -187,6 +187,12 @@ const commands = [
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
 
     new SlashCommandBuilder()
+        .setName('setwelcomechannel')
+        .setDescription('Set the channel where welcome messages are sent')
+        .addChannelOption(o => o.setName('channel').setDescription('The welcome channel').setRequired(true))
+        .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
+
+    new SlashCommandBuilder()
         .setName('josselin')
         .setDescription('An important fact about Josselin'),
 ];
@@ -704,6 +710,15 @@ client.on('interactionCreate', async interaction => {
             return interaction.reply({ embeds: [ok('Invite Log Set', `Invite logs will be sent in ${logChannel}`)], ephemeral: true });
         }
 
+        if (commandName === 'setwelcomechannel') {
+            const welcomeChannel = interaction.options.getChannel('channel');
+            const tickets = loadTickets();
+            if (!tickets[guild.id]) tickets[guild.id] = {};
+            tickets[guild.id].welcomeChannelId = welcomeChannel.id;
+            saveTickets(tickets);
+            return interaction.reply({ embeds: [ok('Welcome Channel Set', `Welcome messages will be sent in ${welcomeChannel}`)], ephemeral: true });
+        }
+
         if (commandName === 'josselin') {
             return interaction.reply('josselin est un pd');
         }
@@ -859,10 +874,34 @@ async function handleTicketCreate(interaction, category = 'general') {
 }
 
 client.on('guildMemberAdd', async member => {
+    const guild = member.guild;
+    const tickets = loadTickets();
+    const config = tickets[guild.id] ?? {};
+
+    // ── Welcome message ───────────────────────────────────────────────────────
     try {
-        const guild = member.guild;
-        const tickets = loadTickets();
-        const logChannelId = tickets[guild.id]?.inviteChannelId;
+        let welcomeChannel = config.welcomeChannelId
+            ? guild.channels.cache.get(config.welcomeChannelId)
+            : guild.channels.cache.find(c => c.type === 0 && /^g[eé]n[eé]ral$/i.test(c.name));
+
+        if (welcomeChannel) {
+            const welcomeEmbed = new EmbedBuilder()
+                .setColor(0x5865F2)
+                .setDescription(`## Welcome, ${member.user} ! 👋\nGlad to have you here on **${guild.name}**.\nFeel free to read the rules and introduce yourself.`)
+                .setThumbnail(member.user.displayAvatarURL({ size: 256 }))
+                .setFooter({ text: `Member #${guild.memberCount}` })
+                .setTimestamp();
+
+            const msg = await welcomeChannel.send({ embeds: [welcomeEmbed] });
+            setTimeout(() => msg.delete().catch(() => null), 30_000);
+        }
+    } catch (e) {
+        console.error('Error sending welcome message:', e);
+    }
+
+    // ── Invite tracker ────────────────────────────────────────────────────────
+    try {
+        const logChannelId = config.inviteChannelId;
         if (!logChannelId) return;
 
         const logChannel = guild.channels.cache.get(logChannelId);
@@ -879,8 +918,8 @@ client.on('guildMemberAdd', async member => {
             .setTitle('Member Joined')
             .setThumbnail(member.user.displayAvatarURL())
             .addFields(
-                { name: 'Member', value: `${member.user} (${member.user.tag})`, inline: true },
-                { name: 'Invited by', value: usedInvite ? `${usedInvite.inviter} (${usedInvite.inviter.tag})` : 'Unknown', inline: true },
+                { name: 'Member', value: `${member.user} (${member.user.username})`, inline: true },
+                { name: 'Invited by', value: usedInvite ? `${usedInvite.inviter} (${usedInvite.inviter.username})` : 'Unknown', inline: true },
                 { name: 'Total invites', value: usedInvite ? `${usedInvite.uses} invite(s)` : 'N/A', inline: true },
             )
             .setFooter({ text: `Member #${guild.memberCount}` })
