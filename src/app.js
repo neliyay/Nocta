@@ -545,27 +545,38 @@ client.on('interactionCreate', async interaction => {
             const target = interaction.options.getUser('user') ?? interaction.user;
             await interaction.deferReply();
 
+            const botMember = guild.members.me;
+            if (!botMember?.permissions.has(PermissionFlagsBits.ManageGuild)) {
+                return interaction.editReply({
+                    embeds: [err('I need the **Manage Server** permission to view invites.\nAsk a server admin to grant me that permission.')]
+                });
+            }
+
             let guildInvites;
             try {
                 guildInvites = await guild.invites.fetch();
-            } catch {
-                return interaction.editReply({ embeds: [err('I need the **Manage Server** permission to view invites.')] });
+                client.inviteCache.set(guild.id, new Map(guildInvites.map(i => [i.code, i.uses])));
+            } catch (fetchErr) {
+                console.error('Failed to fetch guild invites for /invites command:', fetchErr);
+                return interaction.editReply({
+                    embeds: [err('Failed to retrieve invite data. Make sure I have the **Manage Server** permission.')]
+                });
             }
 
             const userInvites = guildInvites.filter(i => i.inviter?.id === target.id);
-            const total = userInvites.reduce((sum, i) => sum + i.uses, 0);
+            const total = userInvites.reduce((sum, i) => sum + (i.uses ?? 0), 0);
             const details = userInvites.size > 0
-                ? userInvites.map(i => `\`${i.code}\` — **${i.uses}** use(s)`).join('\n')
-                : 'No active invites.';
+                ? userInvites.map(i => `\`${i.code}\` — **${i.uses ?? 0}** use(s)`).join('\n')
+                : 'No active invite links.';
 
             return interaction.editReply({
                 embeds: [
                     new EmbedBuilder()
                         .setColor(0x5865F2)
-                        .setTitle(`📨 Invites — ${target.tag}`)
+                        .setTitle(`📨 Invites — ${target.username}`)
                         .setThumbnail(target.displayAvatarURL())
                         .addFields(
-                            { name: 'Total Invites', value: `**${total}**`, inline: true },
+                            { name: 'Total Uses', value: `**${total}**`, inline: true },
                             { name: 'Active Links', value: `**${userInvites.size}**`, inline: true },
                             { name: 'Invite Details', value: details },
                         )
