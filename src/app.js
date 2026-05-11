@@ -192,9 +192,6 @@ const commands = [
         .addChannelOption(o => o.setName('channel').setDescription('The welcome channel').setRequired(true))
         .setDefaultMemberPermissions(PermissionFlagsBits.ManageGuild),
 
-    new SlashCommandBuilder()
-        .setName('josselin')
-        .setDescription('An important fact about Josselin'),
 ];
 
 const makeEmbed = (color, title, description) =>
@@ -719,11 +716,7 @@ client.on('interactionCreate', async interaction => {
             return interaction.reply({ embeds: [ok('Welcome Channel Set', `Welcome messages will be sent in ${welcomeChannel}`)], ephemeral: true });
         }
 
-        if (commandName === 'josselin') {
-            return interaction.reply('josselin est un pd');
-        }
-
-    } catch (e) {
+} catch (e) {
         console.error(e);
         const reply = { embeds: [err('An unexpected error occurred.')], ephemeral: true };
         if (interaction.replied || interaction.deferred) interaction.editReply(reply);
